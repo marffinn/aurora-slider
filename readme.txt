@@ -1,3 +1,4 @@
+![alt text](https://github.com/marffinn/aurora-slider/blob/master/screenshot.png)
 === Aurora Slider ===
 Requires at least: 5.8
 Requires PHP: 7.4
