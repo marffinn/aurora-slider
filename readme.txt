@@ -1,5 +1,5 @@
 
-<img src="/screenshot.png"
+<img src="screenshot.png" /img>
 
 === Aurora Slider ===
 Requires at least: 5.8
