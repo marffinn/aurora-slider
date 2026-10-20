@@ -1,0 +1,80 @@
+/* Aurora Slider - frontend styles (also reused by the admin canvas for keyframes + buttons) */
+
+.aurora-slider{position:relative;width:100%;height:var(--as-h,560px);overflow:hidden;background:#111;--as-s:1;isolation:isolate;touch-action:pan-y;-webkit-user-select:none;user-select:none;outline-offset:-3px}
+.aurora-slider *{box-sizing:border-box}
+.aurora-slider .as-track,.aurora-slider .as-slide,.aurora-slider .as-bg,.aurora-slider .as-ov{position:absolute;inset:0}
+.aurora-slider .as-slide{visibility:hidden;overflow:hidden}
+.aurora-slider .as-slide.is-active{visibility:visible;z-index:2}
+.aurora-slider .as-slide.is-leaving{visibility:visible;z-index:1}
+.aurora-slider .as-bg{background-repeat:no-repeat;background-size:cover;background-position:center}
+
+/* Layers live in a design space that scales down on small screens (JS sets --as-s) */
+.aurora-slider .as-layers{position:absolute;left:0;top:0;width:calc(100% / var(--as-s));height:calc(100% / var(--as-s));transform:scale(var(--as-s));transform-origin:0 0}
+.aurora-slider .as-layer{position:absolute;max-width:100%;color:#fff;line-height:1.25;z-index:3}
+.aurora-slider .as-layer .as-in{opacity:0}
+.aurora-slider .as-slide.is-active .as-layer .as-in,
+.aurora-slider .as-slide.is-leaving .as-layer .as-in{animation:var(--an,none) var(--dur,800ms) var(--ease,cubic-bezier(.22,1,.36,1)) var(--delay,0ms) both}
+.aurora-slider .as-layer.as-noanim .as-in{opacity:1;animation:none!important}
+.as-layer img,.as-l img{display:block;max-width:100%;height:auto}
+.as-layer h1,.as-layer h2,.as-layer h3,.as-layer h4,.as-layer p,
+.as-l h1,.as-l h2,.as-l h3,.as-l h4,.as-l p{margin:0 0 .4em;padding:0;line-height:1.2;color:inherit;font-family:inherit}
+.as-shadow{text-shadow:0 2px 18px rgba(0,0,0,.45)}
+
+/* Buttons */
+.as-btn{display:inline-block;white-space:nowrap;text-decoration:none!important;background:var(--as-bb,#7c5cff);color:var(--as-bc,#fff)!important;border-radius:var(--as-br,40px);font-size:var(--as-bfs,18px);font-weight:var(--as-bfw,700);padding:var(--as-bpy,16px) var(--as-bpx,34px);line-height:1.2;border:0;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:background .25s,color .25s,transform .25s}
+.as-btn:hover,.as-btn:focus-visible{background:var(--as-bhb,#fff);color:var(--as-bhc,#1b1740)!important;transform:translateY(-2px)}
+
+/* Ken Burns */
+.aurora-slider.as-kb .as-slide.is-active .as-bg,
+.aurora-slider.as-kb .as-slide.is-leaving .as-bg{animation:as-kb 14s ease-out both}
+@keyframes as-kb{from{transform:scale(1)}to{transform:scale(1.12)}}
+
+/* Arrows */
+.aurora-slider .as-arrow{position:absolute;top:50%;z-index:10;transform:translateY(-50%);width:var(--as-arrow-size,48px);height:var(--as-arrow-size,48px);display:flex;align-items:center;justify-content:center;padding:0;margin:0;border:0;cursor:pointer;color:var(--as-arrow-color,#fff);background:var(--as-arrow-bg,rgba(0,0,0,.35));transition:opacity .25s,transform .25s,background .25s;line-height:1;box-shadow:none}
+.aurora-slider .as-arrow:hover{transform:translateY(-50%) scale(1.08)}
+.aurora-slider .as-prev{left:var(--as-arrow-off,20px)}
+.aurora-slider .as-next{right:var(--as-arrow-off,20px)}
+.aurora-slider.as-arrows-circle .as-arrow{border-radius:50%}
+.aurora-slider.as-arrows-square .as-arrow{border-radius:6px}
+.aurora-slider.as-arrows-minimal .as-arrow,.aurora-slider.as-arrows-custom .as-arrow{background:none}
+.aurora-slider .as-arrow img{max-width:100%;max-height:100%;display:block;object-fit:contain;pointer-events:none}
+.aurora-slider.as-arrows-hover .as-arrow{opacity:0}
+.aurora-slider.as-arrows-hover:hover .as-arrow,.aurora-slider.as-arrows-hover:focus-within .as-arrow{opacity:1}
+@media(max-width:640px){.aurora-slider.as-arrows-nomobile .as-arrow{display:none}}
+
+/* Dots */
+.aurora-slider .as-dots{position:absolute;z-index:10;display:flex;align-items:center;gap:var(--as-dot-gap,8px)}
+.aurora-slider .as-pos-bottom-center{left:50%;bottom:var(--as-dot-off,22px);transform:translateX(-50%)}
+.aurora-slider .as-pos-bottom-left{left:var(--as-dot-off,22px);bottom:var(--as-dot-off,22px)}
+.aurora-slider .as-pos-bottom-right{right:var(--as-dot-off,22px);bottom:var(--as-dot-off,22px)}
+.aurora-slider .as-pos-top-center{left:50%;top:var(--as-dot-off,22px);transform:translateX(-50%)}
+.aurora-slider .as-pos-right-center{right:var(--as-dot-off,22px);top:50%;transform:translateY(-50%);flex-direction:column}
+.aurora-slider .as-dots button{padding:0;margin:0;border:0;cursor:pointer;width:var(--as-dot-size,12px);height:var(--as-dot-size,12px);border-radius:50%;background:var(--as-dot-color,#fff);opacity:var(--as-dot-op,.55);transition:transform .25s,opacity .25s,background .25s;box-shadow:none;min-height:0;line-height:1}
+.aurora-slider .as-dots button.is-active{background:var(--as-dot-active,#7c5cff);opacity:1;transform:scale(1.25)}
+.aurora-slider .as-dots-lines button{width:calc(var(--as-dot-size,12px) * 3);height:calc(var(--as-dot-size,12px) / 3);min-height:2px;border-radius:2px}
+.aurora-slider .as-dots-lines button.is-active{transform:none}
+.aurora-slider .as-dots-numbers button{width:calc(var(--as-dot-size,12px) * 2);height:calc(var(--as-dot-size,12px) * 2);background:transparent;color:var(--as-dot-color,#fff);font-size:calc(var(--as-dot-size,12px) * 1.1);font-weight:600}
+.aurora-slider .as-dots-numbers button.is-active{background:var(--as-dot-active,#7c5cff);color:#fff;transform:none}
+
+.aurora-slider .as-progress{position:absolute;left:0;right:0;bottom:0;height:4px;z-index:11;background:rgba(255,255,255,.15)}
+.aurora-slider .as-progress span{display:block;height:100%;background:var(--as-dot-active,#7c5cff);transform-origin:0 50%;transform:scaleX(0)}
+
+/* Entrance animations */
+@keyframes as-fade{from{opacity:0}to{opacity:1}}
+@keyframes as-fade-up{from{opacity:0;transform:translateY(44px)}to{opacity:1;transform:none}}
+@keyframes as-fade-down{from{opacity:0;transform:translateY(-44px)}to{opacity:1;transform:none}}
+@keyframes as-fade-left{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:none}}
+@keyframes as-fade-right{from{opacity:0;transform:translateX(70px)}to{opacity:1;transform:none}}
+@keyframes as-zoom-in{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+@keyframes as-zoom-out{from{opacity:0;transform:scale(1.6)}to{opacity:1;transform:none}}
+@keyframes as-rotate-in{from{opacity:0;transform:rotate(-14deg) translateY(36px)}to{opacity:1;transform:none}}
+@keyframes as-flip-x{from{opacity:0;transform:perspective(800px) rotateX(-90deg)}to{opacity:1;transform:perspective(800px) rotateX(0)}}
+@keyframes as-blur-in{from{opacity:0;filter:blur(18px)}to{opacity:1;filter:blur(0)}}
+@keyframes as-bounce-in{0%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.08)}70%{transform:scale(.95)}100%{opacity:1;transform:scale(1)}}
+@keyframes as-skew-in{from{opacity:0;transform:translateX(-90px) skewX(-20deg)}to{opacity:1;transform:none}}
+@keyframes as-reveal{from{opacity:1;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+
+@media(prefers-reduced-motion:reduce){
+	.aurora-slider .as-layer .as-in{opacity:1;animation:none!important}
+	.aurora-slider.as-kb .as-bg{animation:none!important}
+}
