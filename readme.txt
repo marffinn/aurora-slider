@@ -1,4 +1,6 @@
-![alt text](screenshot.png)
+
+<img src="/screenshot.png"
+
 === Aurora Slider ===
 Requires at least: 5.8
 Requires PHP: 7.4
