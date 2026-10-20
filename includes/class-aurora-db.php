@@ -436,8 +436,23 @@ class Aurora_DB {
 		$rows = $wpdb->get_results( "SELECT s.id, s.title, s.updated_at, (SELECT COUNT(*) FROM $sl x WHERE x.slider_id = s.id) AS slides FROM $s s ORDER BY s.id DESC", ARRAY_A ); // phpcs:ignore
 		$rows = (array) $rows;
 		foreach ( $rows as &$r ) {
-			$r['id']     = (int) $r['id'];
-			$r['slides'] = (int) $r['slides'];
+			$r['id']       = (int) $r['id'];
+			$r['slides']   = (int) $r['slides'];
+			$r['thumb']    = '';
+			$r['color']    = '#1b1740';
+			$r['headline'] = '';
+			$first         = $wpdb->get_var( $wpdb->prepare( "SELECT data FROM $sl WHERE slider_id = %d ORDER BY position ASC, id ASC LIMIT 1", $r['id'] ) ); // phpcs:ignore
+			if ( $first ) {
+				$sd         = self::sanitize_slide( json_decode( $first, true ) );
+				$r['thumb'] = $sd['bg']['image'];
+				$r['color'] = $sd['bg']['color'];
+				foreach ( $sd['layers'] as $ly ) {
+					if ( 'text' === $ly['type'] ) {
+						$r['headline'] = mb_substr( trim( wp_strip_all_tags( $ly['html'] ) ), 0, 70 );
+						break;
+					}
+				}
+			}
 		}
 		unset( $r );
 		return $rows;

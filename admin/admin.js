@@ -49,6 +49,7 @@
 	/* ---------------------------------------------------------------- */
 	const S = { view: 'list', sliders: [], cur: null, global: null, tab: 'slide', si: 0, li: null, dirty: false };
 	let editorOpen = false;
+	let editorFor = null;
 	let drag = null;
 	let replayT = null;
 
@@ -120,7 +121,9 @@
 	function destroyEditor() {
 		if (editorOpen && window.wp && wp.editor) { try { wp.editor.remove('as-mce'); } catch (e) { /* ignore */ } }
 		editorOpen = false;
+		editorFor = null;
 	}
+	const findLayer = id => { for (const sl of S.cur.slides) { const x = sl.layers.find(l => l.id === id); if (x) return x; } return null; };
 
 	function render() {
 		destroyEditor();
@@ -131,12 +134,18 @@
 	}
 
 	function renderList() {
-		const cards = S.sliders.map(s => `<article class="card"><div class="cv"><b>${s.slides} slide${s.slides === 1 ? '' : 's'}</b></div>
+		const total = S.sliders.reduce((n, s) => n + s.slides, 0);
+		const cards = S.sliders.map(s => {
+			const bg = `background:${s.color || '#1b1740'}${s.thumb ? ` ${cssUrl(s.thumb)} center/cover` : ''}`;
+			return `<article class="card"><div class="cv" style="${bg}"><i class="cv-ov"></i><span class="cv-h">${esc(s.headline || s.title)}</span><b class="cv-n">${s.slides} slide${s.slides === 1 ? '' : 's'}</b></div>
 			<div class="bd"><h3>${esc(s.title)}</h3><div class="meta">Updated ${esc(s.updated_at || '')}</div>
 			<span class="short" data-act="copy" data-text="[aurora_slider id=&quot;${s.id}&quot;]" title="Copy shortcode">${I.copy} [aurora_slider id="${s.id}"]</span></div>
-			<div class="ft"><button class="btn sm pri" data-act="edit" data-id="${s.id}">${I.edit} Edit</button><button class="btn sm" data-act="dup" data-id="${s.id}">${I.copy} Duplicate</button><button class="btn sm danger" data-act="del" data-id="${s.id}">${I.trash}</button></div></article>`).join('');
-		root.innerHTML = shell(`<header class="top"><div><h1>Sliders</h1><p>Build, style and embed responsive sliders.</p></div><button class="btn pri" data-act="new">${I.plus} New slider</button></header>
-			${cards ? `<div class="cards">${cards}</div>` : `<div class="empty"><h2>No sliders yet</h2><p>Create your first slider, then paste its shortcode into any page.</p><button class="btn pri" data-act="new">${I.plus} Create slider</button></div>`}`);
+			<div class="ft"><button class="btn sm pri" data-act="edit" data-id="${s.id}">${I.edit} Edit</button><button class="btn sm" data-act="dup" data-id="${s.id}">${I.copy} Duplicate</button><button class="btn sm danger" data-act="del" data-id="${s.id}" aria-label="Delete slider">${I.trash}</button></div></article>`;
+		}).join('');
+		root.innerHTML = shell(`<header class="hero"><div class="hero-t"><h1>Your sliders</h1><p>Design banners with animated text, then drop them in with a shortcode.</p></div>
+			<div class="hero-s"><div><b>${S.sliders.length}</b><span>slider${S.sliders.length === 1 ? '' : 's'}</span></div><div><b>${total}</b><span>slide${total === 1 ? '' : 's'}</span></div></div>
+			<button class="btn lg" data-act="new">${I.plus} New slider</button></header>
+			${cards ? `<div class="cards">${cards}</div>` : `<div class="empty"><h2>No sliders yet</h2><p>Create your first slider, then paste its shortcode into any page.</p><button class="btn pri lg" data-act="new">${I.plus} Create slider</button></div>`}`);
 	}
 
 	function renderEdit() {
@@ -146,9 +155,10 @@
 			<span class="short" data-act="copy" data-text="[aurora_slider id=&quot;${id}&quot;]" title="Copy shortcode">${I.copy} [aurora_slider id="${id}"]</span>
 			<button class="btn pri ${S.dirty ? 'dirty' : ''}" id="as-save" data-act="save">${I.save} Save changes</button></header>
 			<div class="ed"><section class="ed-main">
-				<div class="stage-bar"><span>Canvas: desktop preview. Drag layers to move them; drag the cyan handle to resize text.</span><button class="btn sm" data-act="replay">${I.play} Replay animations</button></div>
-				<div class="stage-wrap" id="as-wrap"><div class="as-stage" id="as-stage"></div></div>
+				<div class="stage-frame"><div class="chrome"><i></i><i></i><i></i><span>Canvas · drag layers to move, drag the cyan handle to resize</span><button class="btn sm" data-act="replay">${I.play} Replay animations</button></div>
+				<div class="stage-wrap" id="as-wrap"><div class="as-stage" id="as-stage"></div></div></div>
 				<div class="strip" id="as-strip"></div>
+				<div class="texted" id="as-texted"></div>
 			</section><aside class="ed-side"><div class="tabs" id="as-tabs" role="tablist"></div><div class="panel" id="as-panel"></div></aside></div>`);
 		renderStage(); renderStrip(); renderTabs(); renderPanel(); fitStage();
 		if (window.ResizeObserver) new ResizeObserver(fitStage).observe($('#as-wrap'));
@@ -264,10 +274,24 @@
 
 	function renderPanel() {
 		const el = $('#as-panel'); if (!el) return;
-		destroyEditor();
 		el.innerHTML = ({ slide: pSlide, layer: pLayer, transition: pTransition, arrows: pArrows, dots: pDots, general: pGeneral }[S.tab] || pSlide)();
+		renderTextBox();
+	}
+
+	// The WYSIWYG editor lives under the slide strip so it has room to breathe
+	function renderTextBox() {
+		const box = $('#as-texted'); if (!box) return;
 		const l = curLayer();
-		if (S.tab === 'layer' && l && l.type === 'text') initEditor(l);
+		if (!l || l.type !== 'text') {
+			destroyEditor();
+			box.innerHTML = '<div class="texted-empty"><b>Text editor</b><span>Select a text layer on the canvas to edit its content here.</span></div>';
+			return;
+		}
+		if (editorOpen && editorFor === l.id) return;
+		destroyEditor();
+		box.innerHTML = `<div class="texted-h"><h3>Text editor</h3><span>${esc(l.name || 'Text')}</span></div><textarea id="as-mce" rows="8">${esc(l.html)}</textarea>`;
+		initEditor(l);
+		editorFor = l.id;
 	}
 
 	const typeLabel = l => ({ text: 'Text', button: 'Button', image: 'Image' }[l.type]);
@@ -289,7 +313,7 @@
 		if (!l) return '<div class="hint">Click a layer on the canvas, or pick one from the Slide tab.</div>';
 		let h = `<div class="grp"><h3>${typeLabel(l)} layer</h3>${fText('Layer name', 'layer.name', typeLabel(l))}`;
 		if (l.type === 'text') {
-			h += `<div class="f"><span class="f-l">Text (visual editor)</span><textarea id="as-mce" rows="6">${esc(l.html)}</textarea><small>Use the toolbar for size, color, alignment and links.</small></div>${fToggle('Text shadow', 'layer.shadow', 'Improves readability over busy photos')}`;
+			h += `<p class="note">Edit the text in the editor below the slides.</p>${fToggle('Text shadow', 'layer.shadow', 'Improves readability over busy photos')}`;
 		} else if (l.type === 'button') {
 			h += `${fText('Label', 'layer.label')}${fText('Link URL', 'layer.url', 'https://')}${fToggle('Open in new tab', 'layer.newTab')}`;
 		} else {
@@ -350,19 +374,21 @@
 	/* ---------------------------------------------------------------- */
 	function initEditor(l) {
 		if (!window.wp || !wp.editor) return;
+		const lid = l.id;
 		wp.editor.initialize('as-mce', {
 			tinymce: {
-				height: 240,
+				height: 300,
 				menubar: false,
 				toolbar1: 'formatselect,fontsizeselect,bold,italic,underline,forecolor,|,alignleft,aligncenter,alignright,|,link,unlink,removeformat',
 				toolbar2: '',
 				block_formats: 'Paragraph=p;Heading 1=h1;Heading 2=h2;Heading 3=h3;Heading 4=h4',
 				fontsize_formats: '12px 14px 16px 18px 20px 24px 28px 32px 40px 48px 56px 64px 72px 88px 104px',
-				content_style: 'body{background:#2a2f55;color:#fff;font-family:sans-serif;padding:10px}a{color:#8fe9ff}',
+				content_style: 'body{background:#2a2f55;color:#fff;font-family:sans-serif;font-size:18px;padding:14px}a{color:#8fe9ff}',
 				setup(ed) {
 					const sync = () => {
+						const t = S.cur && findLayer(lid); if (!t) return;
 						const html = ed.getContent();
-						if (l.html !== html) { l.html = html; updateLayerEl(l); markDirty(); }
+						if (t.html !== html) { t.html = html; updateLayerEl(t); markDirty(); }
 					};
 					ed.on('input change keyup undo redo SetContent ExecCommand', sync);
 				}
