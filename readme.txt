@@ -1,8 +1,7 @@
-![alt text](https://github.com/marffinn/aurora-slider/blob/master/screenshot.png)
 === Aurora Slider ===
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 
 Responsive slider with a visual layer editor, WYSIWYG animated text, movable buttons, 8 transitions, custom arrow graphics and a styled dashboard.
@@ -14,3 +13,6 @@ Responsive slider with a visual layer editor, WYSIWYG animated text, movable but
 
 == Data ==
 Sliders, slides and settings are stored in the tables {prefix}aurora_sliders, {prefix}aurora_slides and {prefix}aurora_options.
+
+== Changes in 1.0.1 ==
+The admin editor now uses a preview-first vertical layout. The complete editing tools panel appears underneath the live slider preview, followed by the slide strip and WYSIWYG text editor. Existing REST API, media-library, drag-and-drop, resize, and save functionality is unchanged.

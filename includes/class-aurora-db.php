@@ -407,6 +407,8 @@ class Aurora_DB {
 		} else {
 			$o['src'] = self::u( $l['src'] ?? '' );
 			$o['alt'] = sanitize_text_field( $l['alt'] ?? '' );
+			$o['flipX'] = self::b( $l, 'flipX', false );
+			$o['flipY'] = self::b( $l, 'flipY', false );
 		}
 		return $o;
 	}

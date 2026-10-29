@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Aurora Slider
  * Description: Modern responsive slider with a visual drag-and-drop layer editor, WYSIWYG animated text, freely movable buttons, multiple transitions and custom arrow graphics. All sliders, slides and settings are stored in dedicated database tables.
- * Version: 1.0.0
+ * Version: 1.0.3
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Aurora
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_VERSION', '1.0.0' );
+define( 'AURORA_VERSION', '1.0.2' );
 define( 'AURORA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AURORA_URL', plugin_dir_url( __FILE__ ) );
 

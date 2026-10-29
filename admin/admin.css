@@ -223,3 +223,192 @@
 @media(max-width:1280px){.ed{grid-template-columns:1fr}.ed-side{position:static;max-height:none}}
 @media(max-width:900px){.ar{grid-template-columns:1fr}.ar-nav{flex-direction:row;align-items:center;padding:12px;position:static;height:auto}.ar-nav nav{flex-direction:row}.nav-foot{display:none}.ar-main{padding:18px 14px 30px}.hero{padding:24px}.hero h1{font-size:30px}}
 @media(prefers-reduced-motion:reduce){.aurora-wrap *{transition:none!important}.card:hover,.th:hover{transform:none}}
+
+/* =========================================================
+   Preview-first editor layout
+   Keep the live preview at the top and place every editing
+   tool directly below it in one full-width workflow.
+   ========================================================= */
+.ed {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+}
+
+.ed-main {
+	display: contents;
+}
+
+.ed-main .stage-frame {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.ed-side {
+	grid-column: 1;
+	grid-row: 2;
+	position: static;
+	width: 100%;
+	max-height: none;
+	overflow: hidden;
+}
+
+.ed-side .tabs {
+	flex-wrap: wrap;
+}
+
+.ed-side .panel {
+	max-height: none;
+	overflow: visible;
+}
+
+.ed-below {
+	grid-column: 1;
+	grid-row: 3;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	min-width: 0;
+}
+
+.ed-below .strip,
+.ed-below .texted {
+	max-width: none;
+}
+
+@media (min-width: 1100px) {
+	.ed-side .panel {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(280px, 1fr));
+		column-gap: 28px;
+		align-items: start;
+	}
+
+	.ed-side .panel > .grp,
+	.ed-side .panel > .actions,
+	.ed-side .panel > .hint {
+		min-width: 0;
+	}
+
+	.ed-side .panel > .actions,
+	.ed-side .panel > .hint {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (min-width: 1500px) {
+	.ed-side .panel {
+		grid-template-columns: repeat(3, minmax(260px, 1fr));
+	}
+}
+
+
+/* Canvas viewport and image transform controls */
+.preview-size{border:1px solid var(--a-line);background:#fff;color:var(--a-tx);border-radius:9px;padding:6px 9px;font:600 12px inherit;max-width:112px}
+.as-l-image img{display:block;width:100%;height:auto;transform-origin:center center}
+.as-l.sel{outline:1px solid #5b4dff;outline-offset:0}
+.as-handle{position:absolute;z-index:8;width:10px;height:10px;border:2px solid #fff;background:#5b4dff;border-radius:3px;display:none;box-shadow:0 1px 4px rgba(10,15,46,.35)}
+.as-l.sel .as-handle{display:block}
+.as-handle.nw{left:-6px;top:-6px;cursor:nwse-resize}.as-handle.n{left:50%;top:-6px;cursor:ew-resize}.as-handle.ne{right:-6px;top:-6px;cursor:nesw-resize}
+.as-handle.e{right:-6px;top:50%;cursor:ew-resize}.as-handle.se{right:-6px;bottom:-6px;cursor:nwse-resize}.as-handle.s{left:50%;bottom:-6px;cursor:ew-resize}
+.as-handle.sw{left:-6px;bottom:-6px;cursor:nesw-resize}.as-handle.w{left:-6px;top:50%;cursor:ew-resize}
+.flip-tools{display:flex;flex-direction:column;gap:7px}.flip-tools .btn{justify-content:center}
+.texted textarea{background:#fff!important;color:#222!important}
+.texted .mce-edit-area iframe{background:#fff!important}
+@media(max-width:1100px){.ar{grid-template-columns:190px minmax(0,1fr)}.ar-main{padding:22px 18px 36px}}
+@media(max-width:782px){.ar{display:block}.ar-nav{position:relative;top:auto;height:auto;padding:14px;gap:14px}.ar-nav nav{flex-direction:row;flex-wrap:wrap}.ar-nav nav a{padding:8px 10px}.nav-foot{display:none}.ar-main{padding:16px 12px 28px}.ed{display:flex;flex-direction:column}.ed-side{position:relative;top:auto;max-height:none;order:2}.ed-main{order:1}.ed-below{order:3}.hero{padding:24px;border-radius:20px}.hero h1{font-size:30px}}
+
+
+/* Compact controls and a cleaner, modern system-font stack. */
+.aurora-wrap{
+	font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+	font-size:13px;
+	line-height:1.4;
+	font-weight:400;
+	-webkit-font-smoothing:antialiased;
+	-moz-osx-font-smoothing:grayscale;
+}
+.aurora-wrap button,.aurora-wrap input,.aurora-wrap select,.aurora-wrap textarea{font-family:inherit;letter-spacing:normal}
+.aurora-wrap h1,.aurora-wrap h2,.aurora-wrap h3,.aurora-wrap p,.aurora-wrap label{letter-spacing:normal}
+.ar{grid-template-columns:214px minmax(0,1fr)}
+.ar-nav{padding:20px 12px;gap:22px}
+.ar-nav nav{gap:4px}
+.ar-nav a{padding:9px 11px;border-radius:9px;font-size:13px}
+.ar-main{padding:22px 26px 34px}
+.hero{padding:25px 30px;border-radius:20px;margin-bottom:20px;gap:20px}
+.hero h1{font-size:32px;letter-spacing:-.5px}
+.hero p{font-size:13px}
+.hero-s{gap:8px}
+.hero-s div{padding:9px 14px;border-radius:12px;min-width:78px}
+.hero-s b{font-size:22px}
+.top{margin-bottom:16px;gap:10px}
+.top h1{font-size:26px;letter-spacing:-.4px}
+.btn{padding:7px 12px;border-radius:9px;font-size:12px;gap:6px}
+.btn.sm{padding:5px 9px;font-size:11.5px}
+.btn.lg{padding:10px 16px;font-size:13px}
+.cards{gap:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{border-radius:16px}
+.card .cv{height:140px;padding:14px 16px}
+.card .bd{padding:13px 16px 10px;gap:8px}
+.card .ft{padding:8px 12px 12px}
+.ed-top{padding:7px 9px;border-radius:13px}
+.ed-top .title-in{font-size:17px;padding:5px 9px}
+.ed{gap:12px}
+.ed-main{gap:12px}
+.stage-frame{border-radius:15px}
+.chrome{padding:7px 10px;font-size:11.5px;gap:6px}
+.chrome i{width:8px;height:8px}
+.preview-size{padding:4px 7px;font-size:11px;max-width:100px}
+.stage-wrap{background-size:14px 14px}
+.strip{gap:8px;padding:9px;border-radius:14px}
+.th{width:96px;height:56px;border-radius:9px}
+.strip-tools{border-radius:9px}
+.texted{padding:12px 14px 14px;border-radius:14px}
+.texted-h{gap:8px;margin-bottom:8px}
+.texted-h h3{font-size:13px}
+.texted-h span{font-size:11px;padding:2px 8px}
+.texted textarea{min-height:120px;padding:9px;font-size:13px}
+.texted .mce-tinymce{border-radius:10px}
+.texted .mce-toolbar-grp .mce-btn button{padding:2px 3px}
+.ed-side{border-radius:15px}
+.tabs{gap:3px;padding:7px}
+.tab{padding:6px 10px;font-size:11.5px;border-radius:8px}
+.panel{padding:4px 13px 15px}
+.grp{padding:11px 0 6px}
+.grp h3{margin-bottom:8px;font-size:12.5px}
+.note{margin-bottom:7px;padding:7px 9px;font-size:11.5px;border-radius:8px}
+.f{margin-bottom:9px}
+.f-l{font-size:11.5px;margin-bottom:4px}
+.f small{margin-top:3px;font-size:10.5px}
+.panel input[type=text],.panel input[type=number],.panel input[type=url],.panel select,.panel textarea{padding:6px 9px;border-radius:8px;font-size:12px;min-height:32px}
+.two{gap:8px}
+.rng{gap:7px}
+.tg{gap:8px;padding:6px 0}
+.tg b{font-size:12px}
+.tg small{font-size:10.5px}
+.tg i{width:34px;height:20px}
+.tg i::after{width:14px;height:14px}
+.tg input:checked+i::after{transform:translateX(14px)}
+.seg{border-radius:9px}
+.seg button{padding:5px 6px;font-size:11px}
+.media{gap:8px}
+.media img,.media .ph{width:68px;height:48px;border-radius:8px}
+.pick{gap:7px;margin-bottom:10px}
+.pick button{padding:9px 4px 8px;border-radius:10px;gap:5px;font-size:11px}
+.pick .gl{font-size:18px;height:20px}
+.ap{width:30px;height:30px}
+.add-l{gap:5px;margin-bottom:8px}
+.ll{gap:4px}
+.ll li{gap:6px;padding:4px 5px 4px 8px;border-radius:8px}
+.ll li .t{font-size:11.5px}
+.ll li .k{font-size:10px;padding:2px 6px}
+.ibtn{width:26px;height:26px}
+.actions{gap:6px;padding-top:10px}
+.pg{gap:14px}
+.pg .box{border-radius:16px;padding:6px 18px 16px}
+.pg .box h2{font-size:15px;margin:14px 0 4px}
+.pg .box input[type=text],.pg .box input[type=number],.pg .box select,.pg .box textarea{padding:6px 9px;min-height:32px;border-radius:8px}
+.toast{right:18px;bottom:18px;padding:10px 15px;border-radius:10px;font-size:12px}
+@media(max-width:900px){.ar-main{padding:16px 12px 26px}.hero{padding:20px}.hero h1{font-size:27px}}
+@media(max-width:782px){.ar-main{padding:13px 10px 22px}.hero{padding:18px;border-radius:15px}.hero h1{font-size:25px}.th{width:82px;height:48px}.texted{padding:10px}}

@@ -47,7 +47,7 @@
 	/* ---------------------------------------------------------------- */
 	/* State + API                                                       */
 	/* ---------------------------------------------------------------- */
-	const S = { view: 'list', sliders: [], cur: null, global: null, tab: 'slide', si: 0, li: null, dirty: false };
+	const S = { view: 'list', sliders: [], cur: null, global: null, tab: 'slide', si: 0, li: null, dirty: false, preview: 'desktop' };
 	let editorOpen = false;
 	let editorFor = null;
 	let drag = null;
@@ -85,7 +85,7 @@
 		const base = { id: uid(), type, name: '', x: 10, y: 30, w: 45, ax: 'left', ay: 'top', anim: { in: 'fade-up', delay: 300, duration: 800 } };
 		if (type === 'text') return { ...base, name: 'Text', html: '<h2 style="font-size:56px;font-weight:800;color:#ffffff;">New headline</h2>', shadow: false };
 		if (type === 'button') return { ...base, name: 'Button', y: 64, label: 'Learn more', url: '#', newTab: false, anim: { in: 'zoom-in', delay: 700, duration: 700 }, style: { bg: '#7c5cff', color: '#ffffff', hoverBg: '#ffffff', hoverColor: '#1b1740', radius: 40, fontSize: 18, weight: '700', px: 34, py: 16 } };
-		return { ...base, name: 'Image', src: '', alt: '', w: 30 };
+		return { ...base, name: 'Image', src: '', alt: '', w: 30, flipX: false, flipY: false };
 	};
 	const defSlide = () => ({ id: uid(), name: '', bg: { image: '', color: '#1b1740', size: 'cover', position: 'center center' }, overlay: { color: '#000000', opacity: 25 }, layers: [defLayer('text'), defLayer('button')] });
 
@@ -154,12 +154,20 @@
 			<input class="title-in" data-b="slider.title" value="${esc(S.cur.title)}" aria-label="Slider title">
 			<span class="short" data-act="copy" data-text="[aurora_slider id=&quot;${id}&quot;]" title="Copy shortcode">${I.copy} [aurora_slider id="${id}"]</span>
 			<button class="btn pri ${S.dirty ? 'dirty' : ''}" id="as-save" data-act="save">${I.save} Save changes</button></header>
-			<div class="ed"><section class="ed-main">
-				<div class="stage-frame"><div class="chrome"><i></i><i></i><i></i><span>Canvas · drag layers to move, drag the cyan handle to resize</span><button class="btn sm" data-act="replay">${I.play} Replay animations</button></div>
-				<div class="stage-wrap" id="as-wrap"><div class="as-stage" id="as-stage"></div></div></div>
-				<div class="strip" id="as-strip"></div>
-				<div class="texted" id="as-texted"></div>
-			</section><aside class="ed-side"><div class="tabs" id="as-tabs" role="tablist"></div><div class="panel" id="as-panel"></div></aside></div>`);
+			<div class="ed">
+				<section class="ed-main">
+					<div class="stage-frame"><div class="chrome"><i></i><i></i><i></i><span>Live canvas · drag to move, use transform points to resize</span><select class="preview-size" data-preview aria-label="Preview size"><option value="desktop" ${S.preview === 'desktop' ? 'selected' : ''}>Desktop</option><option value="tablet" ${S.preview === 'tablet' ? 'selected' : ''}>Tablet</option><option value="mobile" ${S.preview === 'mobile' ? 'selected' : ''}>Mobile</option></select><button class="btn sm" data-act="replay">${I.play} Replay animations</button></div>
+					<div class="stage-wrap" id="as-wrap"><div class="as-stage" id="as-stage"></div></div></div>
+				</section>
+				<aside class="ed-side">
+					<div class="tabs" id="as-tabs" role="tablist"></div>
+					<div class="panel" id="as-panel"></div>
+				</aside>
+				<div class="ed-below">
+					<div class="strip" id="as-strip"></div>
+					<div class="texted" id="as-texted"></div>
+				</div>
+			</div>`);
 		renderStage(); renderStrip(); renderTabs(); renderPanel(); fitStage();
 		if (window.ResizeObserver) new ResizeObserver(fitStage).observe($('#as-wrap'));
 	}
@@ -170,6 +178,7 @@
 	const AX = { left: '0', center: '-50%', right: '-100%' };
 	const AY = { top: '0', middle: '-50%', bottom: '-100%' };
 	const layerStyle = l => `left:${l.x}%;top:${l.y}%;${l.type === 'button' ? '' : `width:${l.w}%;`}transform:translate(${AX[l.ax] || '0'},${AY[l.ay] || '0'});`;
+	const resizeHandles = '<i class="as-handle nw" data-edge="left"></i><i class="as-handle n" data-edge="right"></i><i class="as-handle ne" data-edge="right"></i><i class="as-handle e" data-edge="right"></i><i class="as-handle se" data-edge="right"></i><i class="as-handle s" data-edge="left"></i><i class="as-handle sw" data-edge="left"></i><i class="as-handle w" data-edge="left"></i>';
 	const inVars = l => `--an:${l.anim.in === 'none' ? 'none' : 'as-' + l.anim.in};--dur:${l.anim.duration}ms;--delay:${l.anim.delay}ms;`;
 	function layerInner(l) {
 		if (l.type === 'text') return l.html || '<p>Empty text</p>';
@@ -177,9 +186,9 @@
 			const s = l.style;
 			return `<a class="as-btn" style="--as-bb:${s.bg};--as-bc:${s.color};--as-bhb:${s.hoverBg};--as-bhc:${s.hoverColor};--as-br:${s.radius}px;--as-bfs:${s.fontSize}px;--as-bfw:${s.weight};--as-bpx:${s.px}px;--as-bpy:${s.py}px">${esc(l.label)}</a>`;
 		}
-		return l.src ? `<img src="${esc(l.src)}" alt="">` : '<div class="ph">Choose an image</div>';
+		return l.src ? `<img src="${esc(l.src)}" alt="${esc(l.alt || '')}" style="transform:scale(${l.flipX ? -1 : 1},${l.flipY ? -1 : 1})">` : '<div class="ph">Choose an image</div>'; 
 	}
-	const layerEl = l => `<div class="as-l as-l-${l.type} ${l.id === S.li ? 'sel' : ''}" data-id="${esc(l.id)}" style="${layerStyle(l)}"><div class="as-in ${l.shadow ? 'as-shadow' : ''}" style="${inVars(l)}">${layerInner(l)}</div>${l.type === 'button' ? '' : '<span class="as-rz"></span>'}</div>`;
+	const layerEl = l => `<div class="as-l as-l-${l.type} ${l.id === S.li ? 'sel' : ''}" data-id="${esc(l.id)}" style="${layerStyle(l)}"><div class="as-in ${l.shadow ? 'as-shadow' : ''}" style="${inVars(l)}">${layerInner(l)}</div>${l.type === 'button' ? '' : resizeHandles}</div>`;
 
 	function renderStage() {
 		const st = $('#as-stage'); if (!st) return;
@@ -193,10 +202,11 @@
 	}
 	function fitStage() {
 		const w = $('#as-wrap'), st = $('#as-stage'); if (!w || !st) return;
-		const sc = Math.min(1, w.clientWidth / 1200), h = S.cur.settings.height.desktop;
-		st.style.transform = `scale(${sc})`;
-		st.style.height = h + 'px';
-		w.style.height = (h * sc) + 'px';
+		const dims = { desktop: { width: 1200, key: 'desktop' }, tablet: { width: 768, key: 'tablet' }, mobile: { width: 390, key: 'mobile' } }[S.preview] || { width: 1200, key: 'desktop' };
+		const baseW = dims.width, h = Number(S.cur.settings.height[dims.key]) || 560;
+		const sc = Math.min(1, w.clientWidth / baseW);
+		st.style.width = baseW + 'px'; st.style.transform = `scale(${sc})`;
+		st.style.height = h + 'px'; w.style.height = (h * sc) + 'px';
 	}
 	function updateLayerEl(l) {
 		const el = $(`.as-l[data-id="${l.id}"]`); if (!el) return;
@@ -222,7 +232,7 @@
 		const l = layerById(el.dataset.id);
 		if (S.li !== l.id) selectLayer(l.id);
 		const live = $(`.as-l[data-id="${l.id}"]`);
-		drag = { l, el: live, mode: e.target.closest('.as-rz') ? 'resize' : 'move', sx: e.clientX, sy: e.clientY, x: l.x, y: l.y, w: l.w, rect: $('#as-stage').getBoundingClientRect() };
+		drag = { l, el: live, mode: e.target.closest('.as-handle') ? 'resize' : 'move', edge: e.target.closest('.as-handle')?.dataset.edge || 'right', sx: e.clientX, sy: e.clientY, x: l.x, y: l.y, w: l.w, rect: $('#as-stage').getBoundingClientRect() };
 		try { live.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
 		e.preventDefault();
 	});
@@ -235,7 +245,8 @@
 			l.x = r1(clamp(drag.x + dx, 0, 100)); l.y = r1(clamp(drag.y + dy, 0, 100));
 			drag.el.style.left = l.x + '%'; drag.el.style.top = l.y + '%';
 		} else {
-			l.w = r1(clamp(drag.w + dx, 2, 100));
+			const signedDx = drag.edge === 'left' ? -dx : dx;
+			l.w = r1(clamp(drag.w + signedDx, 2, 100));
 			drag.el.style.width = l.w + '%';
 		}
 		['x', 'y', 'w'].forEach(k => { const inp = $(`[data-b="layer.${k}"]`); if (inp) inp.value = l[k]; });
@@ -314,12 +325,16 @@
 		let h = `<div class="grp"><h3>${typeLabel(l)} layer</h3>${fText('Layer name', 'layer.name', typeLabel(l))}`;
 		if (l.type === 'text') {
 			h += `<p class="note">Edit the text in the editor below the slides.</p>${fToggle('Text shadow', 'layer.shadow', 'Improves readability over busy photos')}`;
-		} else if (l.type === 'button') {
+		}
+		if (l.type === 'button') {
 			h += `${fText('Label', 'layer.label')}${fText('Link URL', 'layer.url', 'https://')}${fToggle('Open in new tab', 'layer.newTab')}`;
 		} else {
 			h += `${fMedia('Image', 'layer.src')}${fText('Alt text', 'layer.alt')}`;
 		}
 		h += '</div>';
+		if (l.type === 'image') {
+			h += `<div class="grp"><h3>Image transforms</h3><div class="flip-tools"><button type="button" class="btn sm" data-act="flip-image" data-axis="x">⇋ Flip horizontally</button><button type="button" class="btn sm" data-act="flip-image" data-axis="y">⇅ Flip vertically</button></div><p class="note">Use the eight transform points on the selected image to adjust its width.</p></div>`;
+		}
 		if (l.type === 'button') {
 			h += `<div class="grp"><h3>Button style</h3><div class="two">${fColor('Background', 'layer.style.bg')}${fColor('Text', 'layer.style.color')}${fColor('Hover background', 'layer.style.hoverBg')}${fColor('Hover text', 'layer.style.hoverColor')}</div>
 				${fRange('Corner radius', 'layer.style.radius', 0, 60)}${fRange('Font size', 'layer.style.fontSize', 10, 48)}
@@ -377,13 +392,13 @@
 		const lid = l.id;
 		wp.editor.initialize('as-mce', {
 			tinymce: {
-				height: 300,
+				height: 220,
 				menubar: false,
 				toolbar1: 'formatselect,fontsizeselect,bold,italic,underline,forecolor,|,alignleft,aligncenter,alignright,|,link,unlink,removeformat',
 				toolbar2: '',
 				block_formats: 'Paragraph=p;Heading 1=h1;Heading 2=h2;Heading 3=h3;Heading 4=h4',
 				fontsize_formats: '12px 14px 16px 18px 20px 24px 28px 32px 40px 48px 56px 64px 72px 88px 104px',
-				content_style: 'body{background:#2a2f55;color:#fff;font-family:sans-serif;font-size:18px;padding:14px}a{color:#8fe9ff}',
+				content_style: 'html,body{background:#fff!important;color:#222;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;padding:10px}a{color:#2271b1}img{max-width:100%;height:auto}',
 				setup(ed) {
 					const sync = () => {
 						const t = S.cur && findLayer(lid); if (!t) return;
@@ -413,6 +428,7 @@
 		if (t.type === 'color') { const c = t.parentNode.querySelector('code'); if (c) c.textContent = v; }
 		changed(p);
 	}
+	root.addEventListener('change', e => { if (e.target.matches('[data-preview]')) { S.preview = e.target.value; fitStage(); } });
 	root.addEventListener('input', onField);
 	root.addEventListener('change', onField);
 
@@ -507,6 +523,7 @@
 			case 'back': go('list'); break;
 			case 'save': save(); break;
 			case 'replay': replay(); break;
+			case 'flip-image': { const l = curLayer(); if (l && l.type === 'image') { const k = e.target.closest('[data-axis]').dataset.axis === 'x' ? 'flipX' : 'flipY'; l[k] = !l[k]; updateLayerEl(l); markDirty(); renderPanel(); } break; }
 			case 'tab': S.tab = d.t; renderTabs(); renderPanel(); break;
 			case 'pick-slide': S.si = +d.i; S.li = null; if (S.tab === 'layer') S.tab = 'slide'; renderStage(); renderStrip(); renderTabs(); renderPanel(); break;
 			case 'add-slide': S.cur.slides.push(defSlide()); S.si = S.cur.slides.length - 1; S.li = null; S.tab = 'slide'; markDirty(); renderStage(); renderStrip(); renderTabs(); renderPanel(); break;
@@ -548,7 +565,7 @@
 		root.innerHTML = shell(`<header class="top"><div><h1>How to use</h1><p>From first slide to live page in a few steps.</p></div></header>
 			<div class="pg"><section class="box"><h2>Publish a slider</h2><ol><li>Create a slider and add your slides, text, buttons and images.</li><li>Select <b>Save changes</b>.</li><li>Paste the shortcode, for example <code>[aurora_slider id="1"]</code>, into a page, post or a Shortcode block.</li></ol>
 			<h2>In a theme template</h2><p><code>&lt;?php aurora_slider( 1 ); ?&gt;</code></p></section>
-			<section class="box"><h2>Working on the canvas</h2><ul><li>Drag any text, button or image to place it. Drag the cyan handle to resize text and images.</li><li>The anchor setting decides which point of a layer sits at X and Y, so you can center things exactly.</li><li>Use Replay animations to preview entrance effects.</li></ul></section>
+			<section class="box"><h2>Working on the canvas</h2><ul><li>Drag layers to place them, use the eight transform points to resize, and flip image layers horizontally or vertically.</li><li>The anchor setting decides which point of a layer sits at X and Y, so you can center things exactly.</li><li>Use Replay animations to preview entrance effects.</li></ul></section>
 			<section class="box"><h2>Where your data lives</h2><p>Sliders, slides and settings are stored in three database tables with the prefix <code>aurora_</code>. Images stay in your Media Library.</p></section></div>`);
 	}
 

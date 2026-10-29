@@ -184,7 +184,7 @@ class Aurora_Render {
 			$href   = $l['url'] ? $l['url'] : '#';
 			$inner  = '<a class="as-btn" href="' . esc_url( $href ) . '"' . $target . ' style="' . esc_attr( $bv ) . '">' . esc_html( $l['label'] ) . '</a>';
 		} elseif ( $l['src'] ) {
-			$inner = '<img src="' . esc_url( $l['src'] ) . '" alt="' . esc_attr( $l['alt'] ) . '" />';
+			$inner = '<img src="' . esc_url( $l['src'] ) . '" alt="' . esc_attr( $l['alt'] ) . '" style="transform:scale(' . ( ! empty( $l['flipX'] ) ? '-1' : '1' ) . ',' . ( ! empty( $l['flipY'] ) ? '-1' : '1' ) . ')" />';
 		}
 
 		return '<div class="' . esc_attr( $cls ) . '" style="' . esc_attr( $pos ) . '"><div class="' . esc_attr( $in_cls ) . '" style="' . esc_attr( $vars ) . '">' . $inner . '</div></div>';
