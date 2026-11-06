@@ -153,7 +153,7 @@
 		root.innerHTML = shell(`<header class="top ed-top"><button class="btn ghost" data-act="back">${I.back} Sliders</button>
 			<input class="title-in" data-b="slider.title" value="${esc(S.cur.title)}" aria-label="Slider title">
 			<span class="short" data-act="copy" data-text="[aurora_slider id=&quot;${id}&quot;]" title="Copy shortcode">${I.copy} [aurora_slider id="${id}"]</span>
-			<button class="btn pri ${S.dirty ? 'dirty' : ''}" id="as-save" data-act="save">${I.save} Save changes</button></header>
+			<button class="btn sm" data-act="export-slider">Export file</button><button class="btn sm" data-act="import-slider">Import file<input type="file" id="as-import-file" accept=".json,application/json" hidden></button><button class="btn pri ${S.dirty ? 'dirty' : ''}" id="as-save" data-act="save">${I.save} Save changes</button></header>
 			<div class="ed">
 				<section class="ed-main">
 					<div class="stage-frame"><div class="chrome"><i></i><i></i><i></i><span>Live canvas · drag to move, use transform points to resize</span><select class="preview-size" data-preview aria-label="Preview size"><option value="desktop" ${S.preview === 'desktop' ? 'selected' : ''}>Desktop</option><option value="tablet" ${S.preview === 'tablet' ? 'selected' : ''}>Tablet</option><option value="mobile" ${S.preview === 'mobile' ? 'selected' : ''}>Mobile</option></select><button class="btn sm" data-act="replay">${I.play} Replay animations</button></div>
@@ -492,6 +492,29 @@
 	const swap = (arr, i, d) => { const j = i + d; if (j < 0 || j >= arr.length) return false; [arr[i], arr[j]] = [arr[j], arr[i]]; return true; };
 	const cloneSlide = s => { const c = JSON.parse(JSON.stringify(s)); c.id = uid(); c.layers.forEach(l => { l.id = uid(); }); return c; };
 
+	
+	async function exportSliderFile() {
+		const payload = JSON.parse(JSON.stringify(S.cur));
+		async function walk(obj) {
+			if (!obj || typeof obj !== 'object') return;
+			for (const k of Object.keys(obj)) {
+				const v = obj[k];
+				if (typeof v === 'string' && /^(src|image|prevImage|nextImage)$/.test(k) && /^https?:\/\//i.test(v)) {
+					try {
+						const r = await fetch(v, { credentials: 'same-origin' });
+						if (r.ok) {
+							const blob = await r.blob();
+							obj[k] = await new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve({ __auroraImage: true, data: fr.result, name: new URL(v).pathname.split('/').pop() || 'image' }); fr.onerror = reject; fr.readAsDataURL(blob); });
+						}
+					} catch (_) {}
+				} else if (v && typeof v === 'object') await walk(v);
+			}
+		}
+		await walk(payload);
+		const blob = new Blob([JSON.stringify({ format: 'aurora-slider', version: 1, slider: payload }, null, 2)], { type: 'application/json' });
+		const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (S.cur.title || 'aurora-slider').replace(/[^a-z0-9_-]+/gi, '-').toLowerCase() + '.aurora.json'; a.click(); URL.revokeObjectURL(a.href); toast('Slider exported');
+	}
+
 	root.addEventListener('click', async e => {
 		const seg = e.target.closest('.seg button');
 		if (seg) {
@@ -522,6 +545,8 @@
 			case 'copy': try { await navigator.clipboard.writeText(d.text); toast('Shortcode copied'); } catch (err) { toast(d.text); } break;
 			case 'back': go('list'); break;
 			case 'save': save(); break;
+			case 'export-slider': try { await exportSliderFile(); } catch (err) { toast(err.message, true); } break;
+			case 'import-slider': $('#as-import-file')?.click(); break;
 			case 'replay': replay(); break;
 			case 'flip-image': { const l = curLayer(); if (l && l.type === 'image') { const k = e.target.closest('[data-axis]').dataset.axis === 'x' ? 'flipX' : 'flipY'; l[k] = !l[k]; updateLayerEl(l); markDirty(); renderPanel(); } break; }
 			case 'tab': S.tab = d.t; renderTabs(); renderPanel(); break;
@@ -541,6 +566,18 @@
 			case 'save-global': try { S.global = await api('settings', 'PUT', S.global); toast('Settings saved'); renderGlobal(); } catch (err) { toast(err.message, true); } break;
 			default: break;
 		}
+	});
+
+	
+	root.addEventListener('change', async e => {
+		if (e.target.id !== 'as-import-file' || !e.target.files[0]) return;
+		try {
+			const pack = JSON.parse(await e.target.files[0].text());
+			if (pack.format !== 'aurora-slider' || !pack.slider) throw new Error('Invalid Aurora Slider export file.');
+			const imported = await api('import', 'POST', pack.slider);
+			S.sliders = await api('sliders'); await openSlider(imported.id); toast('Slider and pictures imported');
+		} catch (err) { toast(err.message || 'Import failed', true); }
+		e.target.value = '';
 	});
 
 	// Keyboard access for the pseudo-buttons

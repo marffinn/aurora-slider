@@ -67,6 +67,13 @@ class Aurora_REST {
 			)
 		);
 
+
+		register_rest_route( self::NS, '/import', array(
+			'methods' => 'POST',
+			'callback' => array( __CLASS__, 'import_slider' ),
+			'permission_callback' => $can,
+		) );
+
 		register_rest_route(
 			self::NS,
 			'/settings',
@@ -128,6 +135,31 @@ class Aurora_REST {
 	public static function duplicate( $req ) {
 		$new = Aurora_DB::duplicate_slider( (int) $req['id'] );
 		return $new ? rest_ensure_response( Aurora_DB::get_slider( $new ) ) : self::not_found();
+	}
+
+
+	public static function import_slider( $req ) {
+		$p = $req->get_json_params();
+		if ( ! is_array( $p ) || empty( $p['slides'] ) || ! is_array( $p['slides'] ) ) {
+			return new WP_Error( 'aurora_invalid_import', 'Invalid slider export file.', array( 'status' => 400 ) );
+		}
+		$restore = function( &$value ) use ( &$restore ) {
+			if ( ! is_array( $value ) ) return;
+			if ( ! empty( $value['__auroraImage'] ) && ! empty( $value['data'] ) ) {
+				if ( ! preg_match( '#^data:image/(png|jpeg|jpg|gif|webp);base64,#i', $value['data'], $m ) ) { $value = ''; return; }
+				$bits = base64_decode( substr( $value['data'], strpos( $value['data'], ',' ) + 1 ), true );
+				if ( false === $bits || strlen( $bits ) > 12000000 ) { $value = ''; return; }
+				$ext = strtolower( $m[1] ); $ext = 'jpeg' === $ext ? 'jpg' : $ext;
+				$upload = wp_upload_bits( sanitize_file_name( $value['name'] ?? 'aurora-image.' . $ext ), null, $bits );
+				$value = empty( $upload['error'] ) ? $upload['url'] : '';
+				return;
+			}
+			foreach ( $value as &$child ) $restore( $child );
+		};
+		$restore( $p );
+		$id = Aurora_DB::create_slider( sanitize_text_field( ( $p['title'] ?? 'Imported slider' ) . ' (import)' ), $p['settings'] ?? array(), $p['slides'] );
+		if ( ! $id ) return new WP_Error( 'aurora_import_failed', 'Could not import slider.', array( 'status' => 500 ) );
+		return rest_ensure_response( Aurora_DB::get_slider( $id ) );
 	}
 
 	public static function get_settings() {
